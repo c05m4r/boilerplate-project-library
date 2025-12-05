@@ -69,59 +69,41 @@ module.exports = function (app) {
 
   app.route('/api/books/:id')
     .get(async function (req, res){
+      const bookID = req.params.id;
       try {
-        const bookID = req.params.id;
-        if (!mongoose.Types.ObjectId.isValid(bookID)) {
-          return res.type('text').send('no book exists');
-        }
         const book = await Book.findById(bookID);
-        if (!book) {
-          return res.type('text').send('no book exists');
-        }
-        return res.json(formatSingleBook(book));
+        res.json(formatSingleBook(book));
       } catch (err) {
-        console.error('Failed to fetch book', err);
-        return res.status(500).type('text').send('internal server error');
+        return res.send('no book exists');
       }
     })
     
     .post(async function(req, res){
+      const bookID = req.params.id;
+      const comment = req.body.comment && req.body.comment.trim();
+      if (!comment) {
+        res.send('missing required field comment');
+        return;
+      }
       try {
-        const bookID = req.params.id;
-        const comment = req.body.comment && req.body.comment.trim();
-        if (!mongoose.Types.ObjectId.isValid(bookID)) {
-          return res.type('text').send('no book exists');
-        }
-        if (!comment) {
-          return res.type('text').send('missing required field comment');
-        }
         const book = await Book.findById(bookID);
-        if (!book) {
-          return res.type('text').send('no book exists');
-        }
         book.comments.push(comment);
-        await book.save();
-        return res.json(formatSingleBook(book));
+        book = await book.save();
+        res.json(formatSingleBook(book));
       } catch (err) {
-        console.error('Failed to append comment', err);
-        return res.status(500).type('text').send('internal server error');
+        return res.send('no book exists');
       }
     })
     
     .delete(async function(req, res){
+      const bookID = req.params.id;
       try {
-        const bookID = req.params.id;
-        if (!mongoose.Types.ObjectId.isValid(bookID)) {
-          return res.type('text').send('no book exists');
-        }
         const deletion = await Book.findByIdAndDelete(bookID);
-        if (!deletion) {
-          return res.type('text').send('no book exists');
-        }
-        return res.type('text').send('delete successful');
+        if (!deletion) throw new Error('not found');
+          res.send('no book exists');
+        res.send('delete successful');
       } catch (err) {
-        console.error('Failed to delete book', err);
-        return res.status(500).type('text').send('internal server error');
+        return res.send('no book exists');
       }
     });
   
