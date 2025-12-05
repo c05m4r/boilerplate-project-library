@@ -49,7 +49,7 @@ module.exports = function (app) {
         }
         const newBook = await Book({ title, comments: [] });
         const savedBook = await newBook.save();
-        return res.json(formatSingleBook(savedBook));
+        return res.json({ _id: savedBook._id, title: savedBook.title });
       } catch (err) {
         console.error('Failed to create book', err);
         return res.status(500).type('text').send('internal server error');
