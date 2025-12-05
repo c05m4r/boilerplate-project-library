@@ -6,5 +6,6 @@ const BookSchema = new Schema({
   comments: { type: [String], default: [] }
 });
 
-const Book = mongoose.models.Book || mongoose.model('Book', BookSchema);
-module.exports = Book;
+const Book = mongoose.model('Book', BookSchema);
+
+exports.Book = Book;

@@ -9,7 +9,7 @@
 'use strict';
 
 const mongoose = require('mongoose');
-const Book = require('../models');
+const Book = require('../models').Book;
 
 const formatListBook = (book) => ({
   _id: book._id,
@@ -47,8 +47,9 @@ module.exports = function (app) {
         if (!title) {
           return res.status(200).type('text').send('missing required field title');
         }
-        const newBook = await Book.create({ title, comments: [] });
-        return res.json(formatSingleBook(newBook));
+        const newBook = await Book({ title, comments: [] });
+        const savedBook = await newBook.save();
+        return res.json(formatSingleBook(savedBook));
       } catch (err) {
         console.error('Failed to create book', err);
         return res.status(500).type('text').send('internal server error');
