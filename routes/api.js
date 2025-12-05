@@ -30,14 +30,9 @@ module.exports = function (app) {
     .get(async function (req, res){
       try {
         const books = await Book.find({});
-        if (!books) {
-          res.json([]);
-          return;
-        }
-        res.json(books.map(formatListBook));
-        return;
+        return res.json(books.map(formatListBook));
       } catch (err) {
-        res.send([]);
+        return res.json([]);
       }
     })
     
@@ -47,21 +42,21 @@ module.exports = function (app) {
         res.send('missing required field title');
         return;
       }
-      const newBook = await Book({ title, comments: [] });
+      const newBook = new Book({ title, comments: [] });
       try {
         const savedBook = await newBook.save();
         return res.json({ _id: savedBook._id, title: savedBook.title });
       } catch (err) {
-        res.send('there was an error saving the book');
+        return res.send('there was an error saving the book');
       }
     })
     
     .delete(async function(req, res){
       try {
         const deleted = await Book.deleteMany({});
-        res.send('complete delete successful');
+        return res.send('complete delete successful');
       } catch (err) {
-        res.send('there was an error deleting the books');
+        return res.send('there was an error deleting the books');
       }
     });
 
@@ -72,7 +67,8 @@ module.exports = function (app) {
       const bookID = req.params.id;
       try {
         const book = await Book.findById(bookID);
-        res.json(formatSingleBook(book));
+        if (!book) return res.send('no book exists');
+        return res.json(formatSingleBook(book));
       } catch (err) {
         return res.send('no book exists');
       }
@@ -82,14 +78,14 @@ module.exports = function (app) {
       const bookID = req.params.id;
       const comment = req.body.comment && req.body.comment.trim();
       if (!comment) {
-        res.send('missing required field comment');
-        return;
+        return res.send('missing required field comment');
       }
       try {
         const book = await Book.findById(bookID);
+        if (!book) return res.send('no book exists');
         book.comments.push(comment);
-        book = await book.save();
-        res.json(formatSingleBook(book));
+        const savedBook = await book.save();
+        return res.json(formatSingleBook(savedBook));
       } catch (err) {
         return res.send('no book exists');
       }
@@ -99,9 +95,10 @@ module.exports = function (app) {
       const bookID = req.params.id;
       try {
         const deletion = await Book.findByIdAndDelete(bookID);
-        if (!deletion) throw new Error('not found');
-          res.send('no book exists');
-        res.send('delete successful');
+        if (!deletion) {
+          return res.send('no book exists');
+        }
+        return res.send('delete successful');
       } catch (err) {
         return res.send('no book exists');
       }
