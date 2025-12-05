@@ -34,35 +34,34 @@ module.exports = function (app) {
           res.json([]);
           return;
         }
-        return res.json(books.map(formatListBook));
+        res.json(books.map(formatListBook));
+        return;
       } catch (err) {
-        console.error('Failed to fetch books', err);
-        return res.status(500).type('text').send('internal server error');
+        res.send([]);
       }
     })
     
     .post(async function (req, res){
+      const title = req.body.title && req.body.title.trim();
+      if (!title) {
+        res.send('missing required field title');
+        return;
+      }
+      const newBook = await Book({ title, comments: [] });
       try {
-        const title = req.body.title && req.body.title.trim();
-        if (!title) {
-          return res.status(200).type('text').send('missing required field title');
-        }
-        const newBook = await Book({ title, comments: [] });
         const savedBook = await newBook.save();
         return res.json({ _id: savedBook._id, title: savedBook.title });
       } catch (err) {
-        console.error('Failed to create book', err);
-        return res.status(500).type('text').send('internal server error');
+        res.send('there was an error saving the book');
       }
     })
     
     .delete(async function(req, res){
       try {
         const deleted = await Book.deleteMany({});
-        return res.type('text').send('complete delete successful');
+        res.send('complete delete successful');
       } catch (err) {
-        console.error('Failed to delete all books', err);
-        return res.status(500).type('text').send('internal server error');
+        res.send('there was an error deleting the books');
       }
     });
 
